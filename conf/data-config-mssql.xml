@@ -1,0 +1,136 @@
+<dataConfig>
+<dataSource type="JdbcDataSource" 
+              driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" 
+             url="jdbc:sqlserver://10.11.233.11:1433;instance=CC-CI-SQL01;databaseName=class_room_transferportal_prod" user="sa" password="themes_zi75sY!"/>	
+			
+<document>
+  <entity name="product"  
+    pk="id"
+    query="select a.supplier_aid,  a.manufacturer_name as manufacturer, a.catalog_key, concat(a.supplier_aid, ':', a.catalog_key) as id,  case when b.description is null then a.DESCRIPTION_SHORT else b.description end as description, a.description_short from bc_art a left join bc_art_descriptions b on a.catalog_key = b.catalog_key and a.supplier_aid = b.supplier_aid"
+    >
+     <field column="id" name="id"/>
+	 <field column="supplier_aid" name="supplier_aid"/>
+	 <field column="catalog_key" name="catalog_key"/>
+	 <field column="manufacturer" name="manufacturer"/>
+     <field column="description_short" name="description_short"/>   
+	 <field column="description" name="description"/> 
+	
+	 
+            <entity name="weight" 
+					query="select concat(supplier_aid, ':', catalog_key) as id,  count(*)+1 as weight_supplier_aid from
+								bc_ft_clssys where classification_key in (17) group by classification_key, supplier_aid, catalog_key" 
+					processor="SqlEntityProcessor" cacheImpl="SortedMapBackedCache" cacheKey="id" cacheLookup="product.id" >
+            <field name="weight_supplier_aid" column="weight_supplier_aid" />
+
+			</entity>
+			
+			
+			<entity name="categories" query="select distinct a.class_id, e.classification_key, a.class_name,concat(a.class_id,' ', a.class_name) as class_text ,concat(e.supplier_aid,':', e.catalog_key) as id,  concat(a.class_name , ' ', b.class_name ,' ', d.class_name) as category , d.class_name as hauptgruppe from mc_classes a inner join mc_classes b on a.class_Parent= b.class_id  
+						   inner join mc_classes c on b.class_parent = c.class_id and b.classification_key = c.classification_key
+						   inner join mc_classes d on c.class_parent = d.class_id and c.classification_key = d.classification_key
+					       inner join bc_art_class_ref e on e.classification_key = a.classification_key and a.class_id = e.class_id 
+										 " processor="SqlEntityProcessor" cacheImpl="SortedMapBackedCache" cacheKey="id" cacheLookup="product.id" >
+            <field name="category" column="category" />
+			<field name="classification_key" column="classification_key"/>
+			<field name="hauptgruppe" column="hauptgruppe" />
+			<field name="class_name" column="class_name" />
+			
+			<field name="class_text" column="class_text"/>
+			</entity>
+	 
+			
+            <entity name="keywords" query="SELECT 
+												CONCAT(a.supplier_aid, ':', a.catalog_key) AS id,
+												keyword_name AS keywords
+											FROM
+												bc_art_class_ref a
+													INNER JOIN
+												mc_keywords b ON a.CLASSIFICATION_KEY = b.classification_key
+													AND a.class_id = b.class_id" 
+					processor="SqlEntityProcessor" 
+					cacheImpl="SortedMapBackedCache" 
+					cacheKey="id" 
+					cacheLookup="product.id" >
+
+					<field name="keywords" column="keywords" />
+					
+					
+					
+			</entity>
+	 
+			<entity name = "class_id" 
+					query="SELECT CONCAT(supplier_aid, ':', catalog_key) AS id, class_id from bc_art_class_ref where classification_key = 17"
+					processor="SqlEntityProcessor" 
+					cacheImpl="SortedMapBackedCache" 
+					cacheKey="id" 
+					cacheLookup="product.id" >
+			
+			 <field name="class_id" column="class_id" />
+			</entity>
+	 
+			<entity name = "merkmale" 
+					query="SELECT DISTINCT
+								CONCAT(a.supplier_aid, ':', a.catalog_key) AS id,
+								
+								case b.ft_val when 'ja' then c.feature_name when 'yes' then c.feature_name else b.ft_val end as merkmale
+								
+							FROM
+								bc_ft_clssys a
+									INNER JOIN
+								bc_ft_val_clss b ON a.catalog_key = b.catalog_key
+									AND a.ft_key = b.ft_key
+									AND a.classification_key = b.classification_key
+								inner join mc_features c on a.classification_key = c.classification_key
+									AND a.class_id = c.class_id and a.feature_id = c.feature_id
+							WHERE
+								a.classification_key IN (SELECT 
+										classification_key
+									FROM
+										mc_classifications
+									WHERE
+										standard_classification = 1)
+									AND b.ft_val NOT IN ( 'nein',  'no')
+									and  isnumeric(b.ft_val) &lt; &gt; 1"
+					processor="SqlEntityProcessor" 
+					cacheImpl="SortedMapBackedCache" 
+					cacheKey="id" 
+					cacheLookup="product.id" >
+			
+			 <field name="merkmale" column="merkmale" />
+			</entity>
+		
+			<entity name="gtin" query="select gtin, concat(supplier_aid,':', catalog_key) as id from bc_art_trade_item where gtin not like '999%'" 
+					processor="SqlEntityProcessor" 
+					cacheImpl="SortedMapBackedCache" 
+					cacheKey="id" 
+					cacheLookup="product.id" >
+
+					<field name="gtin" column="gtin" />
+					
+					
+			</entity>
+			
+			<entity name="gln" query="select gln, concat(supplier_aid,':', catalog_key) as id from bc_art_trade_item where gln not like '999%'" 
+					processor="SqlEntityProcessor" 
+					cacheImpl="SortedMapBackedCache" 
+					cacheKey="id" 
+					cacheLookup="product.id" >
+
+					
+					<field name="gln" column="gln" />
+					
+			</entity>
+			<entity name="identification" query="select distinct concat(a.supplier_aid,':', a.catalog_key) as id, identification_type, b.identification_value from  bc_art_trade_item a inner join bc_art_trade_item_add_identification b on a.catalog_key = b.catalog_key and a.art_trade_item_key = b.art_trade_item_key" 
+					processor="SqlEntityProcessor" 
+					cacheImpl="SortedMapBackedCache" 
+					cacheKey="id" 
+					cacheLookup="product.id" >
+
+					
+					<field name="${identification.identification_type}_identification" column="identification_value" />
+					
+			</entity>
+	 
+  </entity>
+</document>
+</dataConfig>

@@ -1,0 +1,104 @@
+<dataConfig>
+<dataSource type="JdbcDataSource" 
+            driver="com.mysql.jdbc.Driver"
+            url="jdbc:mysql://localhost:3306/class_room_hesse_1_5_3_prod" 
+            user="admin" 
+            password="admin"/>
+	
+			
+<document>
+	
+
+  <entity name="product"  
+    pk="id"
+    query="select a.supplier_aid, a.manufacturer_name as manufacturer, a.catalog_key, concat(a.supplier_aid, ':', a.catalog_key) as id,  case when b.description is null then a.DESCRIPTION_SHORT else b.description end as description_short from bc_art a left join bc_art_descriptions b on a.catalog_key = b.catalog_key and a.supplier_aid = b.supplier_aid"
+    >
+     <field column="id" name="id"/>
+	 <field column="supplier_aid" name="supplier_aid"/>
+	 <field column="catalog_key" name="catalog_key"/>
+	 <field column="manufacturer" name="manufacturer"/>
+     <field column="description_short" name="description_short"/>   
+
+	        <entity name="categories" query="select a.class_id, e.classification_key, a.class_name, concat(e.supplier_aid,':', e.catalog_key) as id,  concat(a.class_name , ' ', b.class_name ,' ', d.class_name) as category , d.class_name as hauptgruppe from mc_classes a inner join mc_classes b on a.class_Parent= b.class_id  
+						   inner join mc_classes c on b.class_parent = c.class_id and b.classification_key = c.classification_key
+						   inner join mc_classes d on c.class_parent = d.class_id and c.classification_key = d.classification_key
+					       inner join bc_art_class_ref e on e.classification_key = a.classification_key and a.class_id = e.class_id
+										 " processor="SqlEntityProcessor" cacheImpl="SortedMapBackedCache" cacheKey="id" cacheLookup="product.id" >
+            <field name="category" column="category" />
+			<field name="classification_key" column="classification_key"/>
+			<field name="hauptgruppe" column="hauptgruppe" />
+			<field name="class_name" column="class_name" />
+			<field name="class_id" column="class_id"/>
+			</entity>
+	 
+	 
+            <entity name="keywords" query="SELECT 
+												CONCAT(a.supplier_aid, ':', a.catalog_key) AS id,
+												keyword_name AS keywords
+											FROM
+												bc_art_class_ref a
+													INNER JOIN
+												mc_keywords b ON a.CLASSIFICATION_KEY = b.classification_key
+													AND a.class_id = b.class_id" 
+					processor="SqlEntityProcessor" 
+					cacheImpl="SortedMapBackedCache" 
+					cacheKey="id" 
+					cacheLookup="product.id" >
+
+					<field name="keywords" column="keywords" />
+					
+					
+					
+			</entity>
+	 
+			
+	 
+			<entity name = "merkmale" 
+					query="SELECT DISTINCT
+								CONCAT(a.supplier_aid, ':', a.catalog_key) AS id,
+								
+								case b.ft_val when 'ja' then c.feature_name when 'yes' then c.feature_name else b.ft_val end as merkmale
+								
+							FROM
+								bc_ft_clssys a
+									INNER JOIN
+								bc_ft_val_clss b ON a.catalog_key = b.catalog_key
+									AND a.ft_key = b.ft_key
+									AND a.classification_key = b.classification_key
+								inner join mc_features c on a.classification_key = c.classification_key
+									AND a.class_id = c.class_id and a.feature_id = c.feature_id
+							WHERE
+								a.classification_key IN (SELECT 
+										classification_key
+									FROM
+										mc_classifications
+									WHERE
+										standard_classification = 1)
+									AND b.ft_val NOT IN ( 'nein',  'no')"
+					processor="SqlEntityProcessor" 
+					cacheImpl="SortedMapBackedCache" 
+					cacheKey="id" 
+					cacheLookup="product.id" >
+			
+					<field name="merkmale" column="merkmale" />
+					
+					
+					
+					
+			</entity>
+			
+			
+			<entity name="trade_item" query="select gtin, gln, concat(supplier_aid,':', catalog_key) as id from bc_art_trade_item" 
+					processor="SqlEntityProcessor" 
+					cacheImpl="SortedMapBackedCache" 
+					cacheKey="id" 
+					cacheLookup="product.id" >
+
+					<field name="gtin" column="gtin" />
+					<field name="gln" column="gln" />
+					
+			</entity>
+			
+	 </entity>
+</document>
+</dataConfig>

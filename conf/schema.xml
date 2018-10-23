@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema name="default-config" version="1.6">
+	<similarity class="org.apache.lucene.search.similarities.BM25Similarity" />
+	<!--Fields related to solr -->
+	<field name="_version_" type="plong" indexed="false" stored="false"/>
+	<field name="_text_" type="text" multiValued="true" indexed="true" stored="false"/>
+	<field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
+	<field name="weight_supplier_aid" type="pint" indexed="true" stored="false" required="false" multiValued="false"/>
+
+	
+	<!--Fields that are indexed (searchable) and stored (retrievable) -->
+	<field name="supplier_aid" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
+	<field name="gtin" type="string" indexed="true" stored="true" required="false" multiValued="true"/>
+	<field name="gln" type="string" indexed="true" stored="true" required="false" multiValued="false"/>
+	<field name="manufacturer" type="manufacturer_text" indexed="true" stored="true" required="false" multiValued="false"/>	
+	<field name="keywords" type="keywords_text" indexed="true" stored="true" required="false" multiValued="true"/>
+	<field name="description" type="string" indexed="true" stored="true" required="false" multiValued="false"/>	
+	
+	<!--Description short  -->
+	<field name="description_short" type="text" indexed="true" stored="true" required="false" multiValued="false"/>
+	<field name="description_short_edge" type="text_edge" indexed="true" stored="false" required="false" multiValued="false"/>
+	
+	<!--Fields that are indexed (searchable) and NOT stored (not retrievable) -->
+	<field name="catalog_key" type="string" indexed="true" stored="true" required="false" multiValued="true"/>
+	<field name="classification_key" type="string" indexed="true" stored="true" required="false" multiValued="true"/>
+	
+	
+	<!--Fields that are NOT indexed (searchable) but stored (retrievable) -->
+	<field name="class_id" type="string" indexed="false" stored="true" required="false" multiValued="false"/>
+	<field name="class_name" type="string" indexed="false" stored="true" required="false" multiValued="true"/>
+	<field name="merkmale" type="string" indexed="false" stored="true" required="false" multiValued="true"/>
+	<field name="category" type="string" indexed="false" stored="true" required="false" multiValued="true"/>	
+	
+	
+	<!--Fields that are modified by tokenizer -->
+	<field name="content" type="text" indexed="true" stored="true" required="false" multiValued="true"/>
+	<field name="content_de" type="text_de" indexed="true" stored="false" required="false" multiValued="true"/>
+
+	
+	
+	<field name="suggest_supplier_aid" type="suggest_raw" indexed="true" stored="true" required="false" multiValued="true"/>
+	<field name="suggest_supplier_aid_edge" type="suggest_raw_edge" indexed="true" stored="true" required="false" multiValued="true"/>
+	<field name="suggest_gtin_edge" type="suggest_raw_edge" indexed="true" stored="true" required="false" multiValued="true"/>
+	<field name="suggest_gln_edge" type="suggest_raw_edge" indexed="true" stored="true" required="false" multiValued="true"/>
+	<field name="suggest_class_id_edge" type="suggest_raw_edge" indexed="true" stored="true" required="false" multiValued="true"/>
+	<field name="suggest_class_name_edge" type="suggest_raw_edge" indexed="true" stored="true" required="false" multiValued="true"/>
+	
+	
+	<field name="class_text" type="suggest_raw" indexed="true" stored="true" required="false" multiValued="true"/>
+	
+	<dynamicField name="*_identification" type="suggest_raw_edge" indexed="true"  stored="true" multiValued="true"/>
+	<copyField source="description_short" dest="description_short_edge"/>
+	
+	<copyField source="description" dest="content"/>
+	<copyField source="manufacturer" dest="content"/>
+	<copyField source="category" dest="content"/>
+	<copyField source="merkmale" dest="content"/>
+	<copyField source="class_name" dest="content"/>
+	<copyField source="keywords" dest="content"/>
+	
+	
+
+	<!-- Copy to suggest fields -->
+	<copyField source="supplier_aid" dest="suggest_supplier_aid"/>
+	<copyField source="supplier_aid" dest="suggest_supplier_aid_edge"/>
+	<copyField source="gtin" dest="suggest_gtin_edge"/>
+	<copyField source="gln" dest="suggest_gln_edge"/>
+	<copyField source="class_id" dest="suggest_class_id_edge"/>
+	<copyField source="class_name" dest="suggest_class_name_edge"/>
+	
+	<uniqueKey>id</uniqueKey>
+	
+	<fieldType name="string" class="solr.StrField" sortMissingLast="true" docValues="true"/>
+	<fieldType name="strings" class="solr.StrField" sortMissingLast="true" multiValued="true" docValues="true"/>
+	<!-- boolean type: "true" or "false" -->
+	<fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
+	<fieldType name="booleans" class="solr.BoolField" sortMissingLast="true" multiValued="true"/>
+	<!-- Numeric field types that index values using KD-trees. Point fields don't support FieldCache, so they must have docValues="true" if needed for sorting, faceting, functions, etc. -->
+	<fieldType name="pint" class="solr.IntPointField" docValues="true"/>
+	<fieldType name="pfloat" class="solr.FloatPointField" docValues="true"/>
+	<fieldType name="plong" class="solr.LongPointField" docValues="true"/>
+	<fieldType name="pdouble" class="solr.DoublePointField" docValues="true"/>
+	<fieldType name="pints" class="solr.IntPointField" docValues="true" multiValued="true"/>
+	<fieldType name="pfloats" class="solr.FloatPointField" docValues="true" multiValued="true"/>
+	<fieldType name="plongs" class="solr.LongPointField" docValues="true" multiValued="true"/>
+	<fieldType name="pdoubles" class="solr.DoublePointField" docValues="true" multiValued="true"/>
+	<fieldType name="pdate" class="solr.DatePointField" docValues="true"/>
+	<fieldType name="pdates" class="solr.DatePointField" docValues="true" multiValued="true"/>
+	<fieldType name="binary" class="solr.BinaryField"/>
+	
+	
+	
+	
+	<fieldType name="text_edge" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+		<analyzer type="index">
+			<charFilter class="solr.HTMLStripCharFilterFactory"/>
+			<charFilter class="solr.PatternReplaceCharFilterFactory" pattern="[^a-zA-Z0-9ÄäÜüÖöß]" replacement=" "/>
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+		
+			<filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+			
+			<filter class="solr.EdgeNGramFilterFactory" minGramSize="2" maxGramSize="15"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+		<analyzer type="query">
+			<charFilter class="solr.PatternReplaceCharFilterFactory" pattern="[^a-zA-Z0-9ÄäÜüÖöß]" replacement=" "/>
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+		
+			<filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+	</fieldType>
+	
+	<fieldType name="text" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+		<analyzer type="index">
+			<charFilter class="solr.HTMLStripCharFilterFactory"/>
+			<charFilter class="solr.PatternReplaceCharFilterFactory" pattern="[^a-zA-Z0-9ÄäÜüÖöß]" replacement=" "/>
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+		
+			<filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+			<filter class="solr.SnowballPorterFilterFactory" language="German2"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+		<analyzer type="query">
+			<charFilter class="solr.PatternReplaceCharFilterFactory" pattern="[^a-zA-Z0-9ÄäÜüÖöß]" replacement=" "/>
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+			<filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+	</fieldType>
+	
+	
+	
+	<fieldType name="suggest_raw" class="solr.TextField" positionIncrementGap="100">
+		<analyzer type="index">
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+		<analyzer type="query">
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+	</fieldType>
+	<fieldType name="suggest_raw_edge" class="solr.TextField" positionIncrementGap="100">
+		<analyzer type="index">
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+			<filter class="solr.EdgeNGramFilterFactory" minGramSize="2" maxGramSize="15"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+		<analyzer type="query">
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+		
+		    <filter class="solr.LowerCaseFilterFactory"/>
+			
+		</analyzer>
+	</fieldType>
+	
+	
+	<fieldType name="keywords_text" class="solr.TextField" positionIncrementGap="100" multiValued="false">
+		<analyzer type="index">
+			<charFilter class="solr.PatternReplaceCharFilterFactory" pattern="[^a-zA-Z0-9ÄäÜüÖöß]" replacement=" "/>
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+		<analyzer type="query">
+			<charFilter class="solr.PatternReplaceCharFilterFactory" pattern="[^a-zA-Z0-9ÄäÜüÖöß]" replacement=" "/>
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+	</fieldType>
+	
+	<fieldType name="manufacturer_text" class="solr.TextField" positionIncrementGap="100" multiValued="false">
+		<analyzer type="index">
+			<charFilter class="solr.HTMLStripCharFilterFactory"/>
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+			<filter class="solr.ShingleFilterFactory" maxShingleSize="4"/>
+		</analyzer>
+		<analyzer type="query">
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+		</analyzer>
+	</fieldType>
+	
+	
+	<fieldType name="text_de" class="solr.TextField" positionIncrementGap="100">
+		<analyzer>
+			<tokenizer class="solr.StandardTokenizerFactory"/>
+			<filter class="solr.LowerCaseFilterFactory"/>
+			<filter class="solr.StopFilterFactory" ignoreCase="true" words="lang/stopwords_de.txt" format="snowball"/>
+			<filter class="solr.GermanNormalizationFilterFactory"/>
+			<filter class="solr.GermanLightStemFilterFactory"/>
+		</analyzer>
+	</fieldType>
+</schema>
